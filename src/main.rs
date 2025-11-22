@@ -24,26 +24,69 @@ use std::{
     path::PathBuf
 };
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let dir = parse_args(&args);
+    let (help, version, dir) = parse_args(&args);
 
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
+    if help {
+        println!(
+            r#"USAGE:
+    lsx [OPTIONS] [DIRECTORY]
 
-        if let Some(name) = path.file_name().and_then(|s| s.to_str()) {            println!("{}", name);
+OPTIONS:
+    -h, --help       Print help
+    -V, --version    Print version"#
+        );
+    }
+
+    if version {
+        println!(
+            r#" _     ______  __
+| |   / ___\ \/ /
+| |   \___ \\  / 
+| |___ ___) /  \ 
+|_____|____/_/\_\
+
+LSX v{}
+Imagine ls command, but better
+
+Copyright (C) 2025 Sergey Desyatkov
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version"#,
+            VERSION
+        );
+    }
+
+    if !help && !version {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            if let Some(name) = path.file_name().and_then(|s| s.to_str()) {            println!("{}", name);
+            }
         }
     }
 
     return Ok(());
 }
 
-fn parse_args(args: &[String]) -> PathBuf {
+fn parse_args(args: &[String]) -> (bool, bool, PathBuf) {
+    let mut help = false;
+    let mut version = false;
     let mut directory = None;
 
     for arg in args.iter().skip(1) {
         match arg.as_str() {
+            "-h" | "--help" => {
+                help = true;
+            },
+            "-V" | "--version" => {
+                version = true;
+            },
             _ if arg.starts_with('-') => {},
             _ => {
                 if directory.is_none() {
@@ -55,5 +98,5 @@ fn parse_args(args: &[String]) -> PathBuf {
 
     let directory = directory.unwrap_or_else(|| env::current_dir().unwrap());
 
-    return directory;
+    return (help, version, directory);
 }
