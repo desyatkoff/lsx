@@ -18,6 +18,7 @@
  */
 
 use std::{
+    cmp::Ordering,
     env,
     fs,
     io,
@@ -28,7 +29,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (all, help, version, dir) = parse_args(&args);
+    let (all, group_directories_first, help, version, dir) = parse_args(&args);
 
     if help {
         println!(
@@ -36,9 +37,10 @@ fn main() -> io::Result<()> {
     lsx [OPTIONS] [DIRECTORY]
 
 OPTIONS:
-    -a, --all        Do not ignore entries starting with .
-    -h, --help       Print help
-    -V, --version    Print version"#
+    -a, --all                    Do not ignore entries starting with .
+    --group-directories-first    List directories before other files
+    -h, --help                   Print help
+    -V, --version                Print version"#
         );
     }
 
@@ -63,14 +65,42 @@ the Free Software Foundation, either version 3 of the License, or
     }
 
     if !help && !version {
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
+        let mut entries: Vec<_> = fs::read_dir(&dir)?
+            .filter_map(|e| e.ok())
+            .collect();
 
-            if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
-                if all || !name.starts_with('.') {
-                    println!("{}", name);
+        if group_directories_first {
+            entries.sort_by(|a, b| {
+                let a_name = a.file_name();
+                let b_name = b.file_name();
+
+                let a_meta = a.metadata();
+                let b_meta = b.metadata();
+
+                let a_is_dir = a_meta
+                    .map(|m| m.is_dir())
+                    .unwrap_or(false);
+                let b_is_dir = b_meta
+                    .map(|m| m.is_dir())
+                    .unwrap_or(false);
+
+                match (a_is_dir, b_is_dir) {
+                    (true, false) => Ordering::Less,
+                    (false, true) => Ordering::Greater,
+                    _ => {
+                        return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());                    }
                 }
+            });
+        }
+
+        for entry in entries {
+            let name = entry
+                .file_name()
+                .to_string_lossy()
+                .to_string();
+
+            if all || !name.starts_with('.') {
+                println!("{}", name);
             }
         }
     }
@@ -78,8 +108,9 @@ the Free Software Foundation, either version 3 of the License, or
     return Ok(());
 }
 
-fn parse_args(args: &[String]) -> (bool, bool, bool, PathBuf) {
+fn parse_args(args: &[String]) -> (bool, bool, bool, bool, PathBuf) {
     let mut all = false;
+    let mut group_directories_first = false;
     let mut help = false;
     let mut version = false;
     let mut directory = None;
@@ -88,6 +119,9 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, PathBuf) {
         match arg.as_str() {
             "-a" | "--all" => {
                 all = true;
+            },
+            "--group-directories-first" => {
+                group_directories_first = true;
             },
             "-h" | "--help" => {
                 help = true;
@@ -106,5 +140,5 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, PathBuf) {
 
     let directory = directory.unwrap_or_else(|| env::current_dir().unwrap());
 
-    return (all, help, version, directory);
+    return (all, group_directories_first, help, version, directory);
 }
