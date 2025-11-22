@@ -42,7 +42,7 @@ Choose your preferred installation method:
 ## Usage
 
 ```Shell
-    lsx
+lsx
 ```
 
 ## Feedback

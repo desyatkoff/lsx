@@ -1,5 +1,5 @@
 # Usage
 
 ```Shell
-    lsx
+lsx
 ```
