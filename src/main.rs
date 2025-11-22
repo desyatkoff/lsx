@@ -28,7 +28,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (help, version, dir) = parse_args(&args);
+    let (all, help, version, dir) = parse_args(&args);
 
     if help {
         println!(
@@ -66,7 +66,10 @@ the Free Software Foundation, either version 3 of the License, or
             let entry = entry?;
             let path = entry.path();
 
-            if let Some(name) = path.file_name().and_then(|s| s.to_str()) {            println!("{}", name);
+            if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
+                if all || !name.starts_with('.') {
+                    println!("{}", name);
+                }
             }
         }
     }
@@ -74,13 +77,17 @@ the Free Software Foundation, either version 3 of the License, or
     return Ok(());
 }
 
-fn parse_args(args: &[String]) -> (bool, bool, PathBuf) {
+fn parse_args(args: &[String]) -> (bool, bool, bool, PathBuf) {
+    let mut all = false;
     let mut help = false;
     let mut version = false;
     let mut directory = None;
 
     for arg in args.iter().skip(1) {
         match arg.as_str() {
+            "-a" | "--all" => {
+                all = true;
+            },
             "-h" | "--help" => {
                 help = true;
             },
@@ -98,5 +105,5 @@ fn parse_args(args: &[String]) -> (bool, bool, PathBuf) {
 
     let directory = directory.unwrap_or_else(|| env::current_dir().unwrap());
 
-    return (help, version, directory);
+    return (all, help, version, directory);
 }
