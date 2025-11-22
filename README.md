@@ -51,6 +51,10 @@ Here is the basic usage guide:
     ```Shell
     lsx --group-directories-first
     ```
+* List directories after other files
+    ```Shell
+    lsx --group-directories-last
+    ```
 * Print help
     ```Shell
     lsx --help
