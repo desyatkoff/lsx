@@ -17,12 +17,16 @@
  * along with LSX. If not, see <https://www.gnu.org/licenses/>
  */
 
-use std::fs;
-use std::io;
-use std::path::Path;
+use std::{
+    env,
+    fs,
+    io,
+    path::PathBuf
+};
 
 fn main() -> io::Result<()> {
-    let dir = Path::new(".");
+    let args: Vec<String> = env::args().collect();
+    let dir = parse_args(&args);
 
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
@@ -33,4 +37,23 @@ fn main() -> io::Result<()> {
     }
 
     return Ok(());
+}
+
+fn parse_args(args: &[String]) -> PathBuf {
+    let mut directory = None;
+
+    for arg in args.iter().skip(1) {
+        match arg.as_str() {
+            _ if arg.starts_with('-') => {},
+            _ => {
+                if directory.is_none() {
+                    directory = Some(PathBuf::from(arg));
+                }
+            }
+        }
+    }
+
+    let directory = directory.unwrap_or_else(|| env::current_dir().unwrap());
+
+    return directory;
 }
