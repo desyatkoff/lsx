@@ -36,6 +36,7 @@ fn main() -> io::Result<()> {
     lsx [OPTIONS] [DIRECTORY]
 
 OPTIONS:
+    -a, --all        Do not ignore entries starting with .
     -h, --help       Print help
     -V, --version    Print version"#
         );
