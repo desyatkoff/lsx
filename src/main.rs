@@ -17,6 +17,20 @@
  * along with LSX. If not, see <https://www.gnu.org/licenses/>
  */
 
-fn main() {
-    println!("Hello, world!");
+use std::fs;
+use std::io;
+use std::path::Path;
+
+fn main() -> io::Result<()> {
+    let dir = Path::new(".");
+
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+
+        if let Some(name) = path.file_name().and_then(|s| s.to_str()) {            println!("{}", name);
+        }
+    }
+
+    return Ok(());
 }
