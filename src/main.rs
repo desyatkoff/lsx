@@ -29,7 +29,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (all, group_directories_first, help, version, dir) = parse_args(&args);
+    let (all, group_directories_first, group_directories_last, help, version, dir) = parse_args(&args);
 
     if help {
         println!(
@@ -39,6 +39,7 @@ fn main() -> io::Result<()> {
 OPTIONS:
     -a, --all                    Do not ignore entries starting with .
     --group-directories-first    List directories before other files
+    --group-directories-last     List directories after other files
     -h, --help                   Print help
     -V, --version                Print version"#
         );
@@ -69,7 +70,7 @@ the Free Software Foundation, either version 3 of the License, or
             .filter_map(|e| e.ok())
             .collect();
 
-        if group_directories_first {
+        if group_directories_first || group_directories_last {
             entries.sort_by(|a, b| {
                 let a_name = a.file_name();
                 let b_name = b.file_name();
@@ -84,11 +85,22 @@ the Free Software Foundation, either version 3 of the License, or
                     .map(|m| m.is_dir())
                     .unwrap_or(false);
 
-                match (a_is_dir, b_is_dir) {
-                    (true, false) => Ordering::Less,
-                    (false, true) => Ordering::Greater,
-                    _ => {
-                        return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());                    }
+                if group_directories_first {
+                    match (a_is_dir, b_is_dir) {
+                        (true, false) => Ordering::Less,
+                        (false, true) => Ordering::Greater,
+                        _ => {
+                            return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());
+                        }
+                    }
+                } else {
+                    match (a_is_dir, b_is_dir) {
+                        (true, false) => Ordering::Greater,
+                        (false, true) => Ordering::Less,
+                        _ => {
+                            return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());
+                        }
+                    }
                 }
             });
         }
@@ -108,9 +120,10 @@ the Free Software Foundation, either version 3 of the License, or
     return Ok(());
 }
 
-fn parse_args(args: &[String]) -> (bool, bool, bool, bool, PathBuf) {
+fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
     let mut all = false;
     let mut group_directories_first = false;
+    let mut group_directories_last = false;
     let mut help = false;
     let mut version = false;
     let mut directory = None;
@@ -122,6 +135,9 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, PathBuf) {
             },
             "--group-directories-first" => {
                 group_directories_first = true;
+            },
+            "--group-directories-last" => {
+                group_directories_last = true;
             },
             "-h" | "--help" => {
                 help = true;
@@ -140,5 +156,5 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, PathBuf) {
 
     let directory = directory.unwrap_or_else(|| env::current_dir().unwrap());
 
-    return (all, group_directories_first, help, version, directory);
+    return (all, group_directories_first, group_directories_last, help, version, directory);
 }
