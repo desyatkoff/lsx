@@ -1,0 +1,5 @@
+# Usage
+
+```Shell
+    lsx
+```

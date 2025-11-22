@@ -1,0 +1,10 @@
+[package]
+name = "lsx"
+version = "0.1.0"
+authors = ["Sergey Desyatkov <sergeidesyatkov@gmail.com>"]
+edition = "2024"
+description = "Imagine ls command, but better"
+repository = "https://github.com/desyatkoff/lsx"
+license = "GPL-3.0-or-later"
+
+[dependencies]
