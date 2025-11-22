@@ -74,4 +74,4 @@ Refer to [CONTRIBUTING.md](/docs/CONTRIBUTING.md)
 
 Copyright (C) Sergey Desyatkov
 
-Template is licensed under the GNU General Public License v3.0 or later. See the [LICENSE](/LICENSE) file for more details
+LSX is licensed under the GNU General Public License v3.0 or later. See the [LICENSE](/LICENSE) file for more details
