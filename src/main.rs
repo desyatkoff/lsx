@@ -24,6 +24,7 @@ use std::{
     io,
     path::PathBuf
 };
+use colored::Colorize;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -66,55 +67,7 @@ the Free Software Foundation, either version 3 of the License, or
     }
 
     if !help && !version {
-        let mut entries: Vec<_> = fs::read_dir(&dir)?
-            .filter_map(|e| e.ok())
-            .collect();
-
-        if group_directories_first || group_directories_last {
-            entries.sort_by(|a, b| {
-                let a_name = a.file_name();
-                let b_name = b.file_name();
-
-                let a_meta = a.metadata();
-                let b_meta = b.metadata();
-
-                let a_is_dir = a_meta
-                    .map(|m| m.is_dir())
-                    .unwrap_or(false);
-                let b_is_dir = b_meta
-                    .map(|m| m.is_dir())
-                    .unwrap_or(false);
-
-                if group_directories_first {
-                    match (a_is_dir, b_is_dir) {
-                        (true, false) => Ordering::Less,
-                        (false, true) => Ordering::Greater,
-                        _ => {
-                            return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());
-                        }
-                    }
-                } else {
-                    match (a_is_dir, b_is_dir) {
-                        (true, false) => Ordering::Greater,
-                        (false, true) => Ordering::Less,
-                        _ => {
-                            return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());
-                        }
-                    }
-                }
-            });
-        }
-
-        for entry in entries {
-            let name = entry
-                .file_name()
-                .to_string_lossy()
-                .to_string();
-
-            if all || !name.starts_with('.') {
-                println!("{}", name);
-            }
-        }
+        list_dir_content(dir);
     }
 
     return Ok(());
@@ -157,4 +110,67 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
     let directory = directory.unwrap_or_else(|| env::current_dir().unwrap());
 
     return (all, group_directories_first, group_directories_last, help, version, directory);
+}
+
+fn list_dir_content(dir: PathBuf) -> io::Result<()> {
+    let args: Vec<String> = env::args().collect();
+    let (all, group_directories_first, group_directories_last, help, version, dir) = parse_args(&args);
+
+    if let Ok(exists) = fs::exists(&dir) {
+        if exists {
+            let mut entries: Vec<_> = fs::read_dir(&dir)?
+                .filter_map(|e| e.ok())
+                .collect();
+
+            if group_directories_first || group_directories_last {
+                entries.sort_by(|a, b| {
+                    let a_name = a.file_name();
+                    let b_name = b.file_name();
+
+                    let a_meta = a.metadata();
+                    let b_meta = b.metadata();
+
+                    let a_is_dir = a_meta
+                        .map(|m| m.is_dir())
+                        .unwrap_or(false);
+                    let b_is_dir = b_meta
+                        .map(|m| m.is_dir())
+                        .unwrap_or(false);
+
+                    if group_directories_first {
+                        match (a_is_dir, b_is_dir) {
+                            (true, false) => Ordering::Less,
+                            (false, true) => Ordering::Greater,
+                            _ => {
+                                return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());
+                            }
+                        }
+                    } else {
+                        match (a_is_dir, b_is_dir) {
+                            (true, false) => Ordering::Greater,
+                            (false, true) => Ordering::Less,
+                            _ => {
+                                return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());
+                            }
+                        }
+                    }
+                });
+            }
+
+            for entry in entries {
+                let name = entry
+                    .file_name()
+                    .to_string_lossy()
+                    .to_string();
+
+                if all || !name.starts_with('.') {
+                    println!("{}", name);
+                }
+            }
+        } else {
+            eprintln!("{}: no such file or directory", "error".red().bold());
+        }
+    }
+
+    return Ok(());
 }
