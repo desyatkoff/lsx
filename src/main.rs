@@ -17,53 +17,21 @@
  * along with LSX. If not, see <https://www.gnu.org/licenses/>
  */
 
-use std::{
-    cmp::Ordering,
-    env,
-    fs,
-    io,
-    path::PathBuf
-};
 use colored::Colorize;
+use std::{cmp::Ordering, env, fs, io, path::PathBuf};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (all, group_directories_first, group_directories_last, help, version, dir) = parse_args(&args);
+    let (_all, _group_directories_first, _group_directories_last, help, version, dir) = parse_args(&args);
 
     if help {
-        println!(
-            r#"USAGE:
-    lsx [OPTIONS] [DIRECTORY]
-
-OPTIONS:
-    -a, --all                    Do not ignore entries starting with .
-    --group-directories-first    List directories before other files
-    --group-directories-last     List directories after other files
-    -h, --help                   Print help
-    -V, --version                Print version"#
-        );
+        print_help();
     }
 
     if version {
-        println!(
-            r#" _     ______  __
-| |   / ___\ \/ /
-| |   \___ \\  / 
-| |___ ___) /  \ 
-|_____|____/_/\_\
-
-LSX v{}
-Imagine ls command, but better
-
-Copyright (C) 2025 Sergey Desyatkov
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version"#,
-            VERSION
-        );
+        print_version();
     }
 
     if !help && !version {
@@ -85,20 +53,20 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
         match arg.as_str() {
             "-a" | "--all" => {
                 all = true;
-            },
+            }
             "--group-directories-first" => {
                 group_directories_first = true;
-            },
+            }
             "--group-directories-last" => {
                 group_directories_last = true;
-            },
+            }
             "-h" | "--help" => {
                 help = true;
-            },
+            }
             "-V" | "--version" => {
                 version = true;
-            },
-            _ if arg.starts_with('-') => {},
+            }
+            _ if arg.starts_with('-') => {}
             _ => {
                 if directory.is_none() {
                     directory = Some(PathBuf::from(arg));
@@ -109,18 +77,24 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
 
     let directory = directory.unwrap_or_else(|| env::current_dir().unwrap());
 
-    return (all, group_directories_first, group_directories_last, help, version, directory);
+    return (
+        all,
+        group_directories_first,
+        group_directories_last,
+        help,
+        version,
+        directory,
+    );
 }
 
 fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (all, group_directories_first, group_directories_last, help, version, dir) = parse_args(&args);
+    let (all, group_directories_first, group_directories_last, _help, _version, _dir) =
+        parse_args(&args);
 
     if let Ok(exists) = fs::exists(&dir) {
         if exists {
-            let mut entries: Vec<_> = fs::read_dir(&dir)?
-                .filter_map(|e| e.ok())
-                .collect();
+            let mut entries: Vec<_> = fs::read_dir(&dir)?.filter_map(|e| e.ok()).collect();
 
             if group_directories_first || group_directories_last {
                 entries.sort_by(|a, b| {
@@ -130,12 +104,8 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                     let a_meta = a.metadata();
                     let b_meta = b.metadata();
 
-                    let a_is_dir = a_meta
-                        .map(|m| m.is_dir())
-                        .unwrap_or(false);
-                    let b_is_dir = b_meta
-                        .map(|m| m.is_dir())
-                        .unwrap_or(false);
+                    let a_is_dir = a_meta.map(|m| m.is_dir()).unwrap_or(false);
+                    let b_is_dir = b_meta.map(|m| m.is_dir()).unwrap_or(false);
 
                     if group_directories_first {
                         match (a_is_dir, b_is_dir) {
@@ -158,10 +128,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
             }
 
             for entry in entries {
-                let name = entry
-                    .file_name()
-                    .to_string_lossy()
-                    .to_string();
+                let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
                     println!("{}", name);
@@ -173,4 +140,38 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     }
 
     return Ok(());
+}
+
+fn print_help() {
+    println!(
+        r#"USAGE:
+lsx [OPTIONS] [DIRECTORY]
+
+OPTIONS:
+    -a, --all                    Do not ignore entries starting with .
+    --group-directories-first    List directories before other files
+    --group-directories-last     List directories after other files
+    -h, --help                   Print help
+    -V, --version                Print version"#
+    );
+}
+
+fn print_version() {
+    println!(
+        r#" _     ______  __
+| |   / ___\ \/ /
+| |   \___ \\  / 
+| |___ ___) /  \ 
+|_____|____/_/\_\
+
+LSX v{}
+Imagine ls command, but better
+
+Copyright (C) 2025 Sergey Desyatkov
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version"#,
+        VERSION
+    );
 }
