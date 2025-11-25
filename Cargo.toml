@@ -8,3 +8,4 @@ repository = "https://github.com/desyatkoff/lsx"
 license = "GPL-3.0-or-later"
 
 [dependencies]
+colored = "3.0.0"
