@@ -35,10 +35,10 @@ fn main() -> io::Result<()> {
     }
 
     if !help && !version {
-        list_dir_content(dir);
+        let _ = list_dir_content(dir);
     }
 
-    return Ok(());
+    Ok(())
 }
 
 fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
@@ -77,20 +77,19 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
 
     let directory = directory.unwrap_or_else(|| env::current_dir().unwrap());
 
-    return (
+    (
         all,
         group_directories_first,
         group_directories_last,
         help,
         version,
         directory,
-    );
+    )
 }
 
 fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (all, group_directories_first, group_directories_last, _help, _version, _dir) =
-        parse_args(&args);
+    let (all, group_directories_first, group_directories_last, _help, _version, _dir) = parse_args(&args);
 
     if let Ok(exists) = fs::exists(&dir) {
         if exists {
@@ -111,17 +110,13 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                         match (a_is_dir, b_is_dir) {
                             (true, false) => Ordering::Less,
                             (false, true) => Ordering::Greater,
-                            _ => {
-                                return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());
-                            }
+                            _ => a_name.to_string_lossy().cmp(&b_name.to_string_lossy()),
                         }
                     } else {
                         match (a_is_dir, b_is_dir) {
                             (true, false) => Ordering::Greater,
                             (false, true) => Ordering::Less,
-                            _ => {
-                                return a_name.to_string_lossy().cmp(&b_name.to_string_lossy());
-                            }
+                            _ => a_name.to_string_lossy().cmp(&b_name.to_string_lossy()),
                         }
                     }
                 });
@@ -139,7 +134,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
         }
     }
 
-    return Ok(());
+    Ok(())
 }
 
 fn print_help() {
