@@ -122,13 +122,20 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 });
             }
 
-            for entry in entries {
+            let mut count = 0;
+
+            for entry in &entries {
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
                     println!("{}", name);
+
+                    count += 1;
                 }
             }
+
+            println!("-------{}", "-".repeat(count.to_string().len()));
+            println!("Total: {}", count);
         } else {
             eprintln!("{}: no such file or directory", "error".red().bold());
         }
