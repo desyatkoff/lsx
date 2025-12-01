@@ -55,6 +55,26 @@ Here is the basic usage guide:
     ```Shell
     lsx --group-directories-last
     ```
+* Show total entries count
+    ```Shell
+    lsx --show-total
+    ```
+* Show entry permissions
+    ```Shell
+    lsx --show-permissions
+    ```
+* Show entry owner
+    ```Shell
+    lsx --show-owner
+    ```
+* Show entry size
+    ```Shell
+    lsx --show-size
+    ```
+* Show entry last modified short date
+    ```Shell
+    lsx --show-date-modified
+    ```
 * Print help
     ```Shell
     lsx --help
