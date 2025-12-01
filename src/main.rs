@@ -24,7 +24,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (_all, _group_directories_first, _group_directories_last, help, version, dir) = parse_args(&args);
+    let (_all, _group_directories_first, _group_directories_last, _show_total, help, version, dir) = parse_args(&args);
 
     if help {
         print_help();
@@ -41,10 +41,11 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
+fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, PathBuf) {
     let mut all = false;
     let mut group_directories_first = false;
     let mut group_directories_last = false;
+    let mut show_total = false;
     let mut help = false;
     let mut version = false;
     let mut directory = None;
@@ -59,6 +60,9 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
             }
             "--group-directories-last" => {
                 group_directories_last = true;
+            }
+            "--show-total" => {
+                show_total = true;
             }
             "-h" | "--help" => {
                 help = true;
@@ -81,6 +85,7 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
         all,
         group_directories_first,
         group_directories_last,
+        show_total,
         help,
         version,
         directory,
@@ -89,7 +94,7 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, PathBuf) {
 
 fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (all, group_directories_first, group_directories_last, _help, _version, _dir) = parse_args(&args);
+    let (all, group_directories_first, group_directories_last, show_total, _help, _version, _dir) = parse_args(&args);
 
     if let Ok(exists) = fs::exists(&dir) {
         if exists {
@@ -124,7 +129,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
 
             let mut count = 0;
 
-            for entry in &entries {
+            for entry in entries {
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
@@ -134,8 +139,10 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 }
             }
 
-            println!("-------{}", "-".repeat(count.to_string().len()));
-            println!("Total: {}", count);
+            if show_total {
+                println!("-------{}", "-".repeat(count.to_string().len()));
+                println!("Total: {}", count);
+            }
         } else {
             eprintln!("{}: no such file or directory", "error".red().bold());
         }
@@ -153,6 +160,7 @@ OPTIONS:
     -a, --all                    Do not ignore entries starting with .
     --group-directories-first    List directories before other files
     --group-directories-last     List directories after other files
+    --show-total                 Show total entries count
     -h, --help                   Print help
     -V, --version                Print version"#
     );
