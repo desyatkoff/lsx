@@ -19,7 +19,15 @@
 
 use chrono::{DateTime, Local};
 use colored::Colorize;
-use std::{cmp::Ordering, env, fs, io, os::unix::fs::MetadataExt, path::PathBuf, time::SystemTime};
+use std::{
+    cmp::Ordering,
+    env,
+    fs::{self, Metadata},
+    io,
+    os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt},
+    path::PathBuf,
+    time::SystemTime,
+};
 use users::get_user_by_uid;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -31,6 +39,7 @@ fn main() -> io::Result<()> {
         _group_directories_first,
         _group_directories_last,
         _show_total,
+        _show_permissions,
         _show_owner,
         _show_size,
         _show_date_modified,
@@ -66,12 +75,14 @@ fn parse_args(
     bool,
     bool,
     bool,
+    bool,
     PathBuf,
 ) {
     let mut all = false;
     let mut group_directories_first = false;
     let mut group_directories_last = false;
     let mut show_total = false;
+    let mut show_permissions = false;
     let mut show_owner = false;
     let mut show_size = false;
     let mut show_date_modified = false;
@@ -92,6 +103,9 @@ fn parse_args(
             }
             "--show-total" => {
                 show_total = true;
+            }
+            "--show-permissions" => {
+                show_permissions = true;
             }
             "--show-owner" => {
                 show_owner = true;
@@ -124,6 +138,7 @@ fn parse_args(
         group_directories_first,
         group_directories_last,
         show_total,
+        show_permissions,
         show_owner,
         show_size,
         show_date_modified,
@@ -131,6 +146,57 @@ fn parse_args(
         version,
         directory,
     )
+}
+
+fn get_permissions_string(meta: &Metadata) -> String {
+    fn bit(x: u32, bit: u32, c: char) -> char {
+        if x & bit != 0 { c } else { '-' }
+    }
+
+    let mut s = String::new();
+
+    let mode = meta.permissions().mode();
+    let file_type = meta.file_type();
+    let type_char = if file_type.is_block_device() {
+        'b'
+    } else if file_type.is_char_device() {
+        'c'
+    } else if file_type.is_dir() {
+        'd'
+    } else if file_type.is_symlink() {
+        'l'
+    } else if file_type.is_fifo() {
+        'p'
+    } else if file_type.is_socket() {
+        's'
+    } else {
+        '-'
+    };
+
+    s.push(type_char);
+    s.push(bit(mode, 0o400, 'r'));
+    s.push(bit(mode, 0o200, 'w'));
+    s.push(if mode & 0o4000 != 0 {
+        if mode & 0o100 != 0 { 's' } else { 'S' }
+    } else {
+        bit(mode, 0o100, 'x')
+    });
+    s.push(bit(mode, 0o040, 'r'));
+    s.push(bit(mode, 0o020, 'w'));
+    s.push(if mode & 0o2000 != 0 {
+        if mode & 0o010 != 0 { 's' } else { 'S' }
+    } else {
+        bit(mode, 0o010, 'x')
+    });
+    s.push(bit(mode, 0o004, 'r'));
+    s.push(bit(mode, 0o002, 'w'));
+    s.push(if mode & 0o1000 != 0 {
+        if mode & 0o001 != 0 { 't' } else { 'T' }
+    } else {
+        bit(mode, 0o001, 'x')
+    });
+
+    s
 }
 
 fn get_owner(uid: u32) -> String {
@@ -175,6 +241,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
         group_directories_first,
         group_directories_last,
         show_total,
+        show_permissions,
         show_owner,
         show_size,
         show_date_modified,
@@ -217,6 +284,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
             let mut count = 0;
 
             for entry in entries {
+                let permissions = get_permissions_string(&entry.metadata().unwrap());
                 let owner = get_owner(entry.metadata().map(|m| m.uid()).unwrap());
                 let size = bytes_to_human_size(entry.metadata().map(|m| m.size()).unwrap());
                 let date_modified = system_time_to_human_time(
@@ -225,6 +293,10 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
+                    if show_permissions {
+                        print!("{} ", permissions)
+                    }
+
                     if show_owner {
                         print!("{} ", owner);
                     }
@@ -265,6 +337,7 @@ OPTIONS:
     --group-directories-first    List directories before other files
     --group-directories-last     List directories after other files
     --show-total                 Show total entries count
+    --show-permissions           Show entry permissions
     --show-owner                 Show entry owner
     --show-size                  Show entry size
     --show-date-modified         Show last modified short date
