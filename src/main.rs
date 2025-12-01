@@ -20,6 +20,7 @@
 use chrono::{DateTime, Local};
 use colored::Colorize;
 use std::{cmp::Ordering, env, fs, io, os::unix::fs::MetadataExt, path::PathBuf, time::SystemTime};
+use users::get_user_by_uid;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -30,6 +31,7 @@ fn main() -> io::Result<()> {
         _group_directories_first,
         _group_directories_last,
         _show_total,
+        _show_owner,
         _show_size,
         _show_date_modified,
         help,
@@ -52,11 +54,25 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, bool, bool, PathBuf) {
+fn parse_args(
+    args: &[String],
+) -> (
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    PathBuf,
+) {
     let mut all = false;
     let mut group_directories_first = false;
     let mut group_directories_last = false;
     let mut show_total = false;
+    let mut show_owner = false;
     let mut show_size = false;
     let mut show_date_modified = false;
     let mut help = false;
@@ -76,6 +92,9 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, bool, boo
             }
             "--show-total" => {
                 show_total = true;
+            }
+            "--show-owner" => {
+                show_owner = true;
             }
             "--show-size" => {
                 show_size = true;
@@ -105,12 +124,22 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, bool, boo
         group_directories_first,
         group_directories_last,
         show_total,
+        show_owner,
         show_size,
         show_date_modified,
         help,
         version,
         directory,
     )
+}
+
+fn get_owner(uid: u32) -> String {
+    get_user_by_uid(uid)
+        .unwrap()
+        .name()
+        .to_str()
+        .unwrap()
+        .to_string()
 }
 
 fn bytes_to_human_size(bytes: u64) -> String {
@@ -146,6 +175,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
         group_directories_first,
         group_directories_last,
         show_total,
+        show_owner,
         show_size,
         show_date_modified,
         _help,
@@ -187,6 +217,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
             let mut count = 0;
 
             for entry in entries {
+                let owner = get_owner(entry.metadata().map(|m| m.uid()).unwrap());
                 let size = bytes_to_human_size(entry.metadata().map(|m| m.size()).unwrap());
                 let date_modified = system_time_to_human_time(
                     entry.metadata().map(|m| m.modified()).unwrap().unwrap(),
@@ -194,6 +225,10 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
+                    if show_owner {
+                        print!("{} ", owner);
+                    }
+
                     if show_size {
                         print!("{} ", size);
                     }
@@ -230,6 +265,7 @@ OPTIONS:
     --group-directories-first    List directories before other files
     --group-directories-last     List directories after other files
     --show-total                 Show total entries count
+    --show-owner                 Show entry owner
     --show-size                  Show entry size
     --show-date-modified         Show last modified short date
     -h, --help                   Print help
