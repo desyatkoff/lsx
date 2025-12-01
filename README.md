@@ -55,6 +55,10 @@ Here is the basic usage guide:
     ```Shell
     lsx --group-directories-last
     ```
+* Use a long listing
+    ```Shell
+    lsx --long
+    ```
 * Show total entries count
     ```Shell
     lsx --show-total
