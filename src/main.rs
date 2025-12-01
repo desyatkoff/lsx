@@ -19,7 +19,7 @@
 
 use chrono::{DateTime, Local};
 use colored::Colorize;
-use std::{cmp::Ordering, env, fs, io, os::unix::fs::MetadataExt, path::PathBuf};
+use std::{cmp::Ordering, env, fs, io, os::unix::fs::MetadataExt, path::PathBuf, time::SystemTime};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -113,6 +113,32 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, bool, boo
     )
 }
 
+fn bytes_to_human_size(bytes: u64) -> String {
+    const UNITS: [&str; 7] = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
+
+    let mut size = bytes as f64;
+    let mut unit = 0;
+
+    while size >= 1024.0 && unit < UNITS.len() - 1 {
+        size /= 1024.0;
+        unit += 1;
+    }
+
+    if size < 10.0 {
+        format!("{:.2} {}", size, UNITS[unit])
+    } else if size < 100.0 {
+        format!("{:.1} {}", size, UNITS[unit])
+    } else {
+        format!("{:.0} {}", size, UNITS[unit])
+    }
+}
+
+fn system_time_to_human_time(time: SystemTime) -> String {
+    DateTime::<Local>::from(time)
+        .format("%d %b %H:%M")
+        .to_string()
+}
+
 fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let (
@@ -162,11 +188,9 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
 
             for entry in entries {
                 let size = bytes_to_human_size(entry.metadata().map(|m| m.size()).unwrap());
-                let date_modified = DateTime::<Local>::from(
+                let date_modified = system_time_to_human_time(
                     entry.metadata().map(|m| m.modified()).unwrap().unwrap(),
-                )
-                .format("%d %b %H:%M")
-                .to_string();
+                );
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
@@ -194,26 +218,6 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     }
 
     Ok(())
-}
-
-fn bytes_to_human_size(bytes: u64) -> String {
-    const UNITS: [&str; 7] = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
-
-    let mut size = bytes as f64;
-    let mut unit = 0;
-
-    while size >= 1024.0 && unit < UNITS.len() - 1 {
-        size /= 1024.0;
-        unit += 1;
-    }
-
-    if size < 10.0 {
-        format!("{:.2} {}", size, UNITS[unit])
-    } else if size < 100.0 {
-        format!("{:.1} {}", size, UNITS[unit])
-    } else {
-        format!("{:.0} {}", size, UNITS[unit])
-    }
 }
 
 fn print_help() {
