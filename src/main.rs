@@ -19,7 +19,7 @@
 
 use chrono::{DateTime, Local};
 use colored::Colorize;
-use std::{cmp::Ordering, env, fs, io, path::PathBuf};
+use std::{cmp::Ordering, env, fs, io, os::unix::fs::MetadataExt, path::PathBuf};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -30,6 +30,7 @@ fn main() -> io::Result<()> {
         _group_directories_first,
         _group_directories_last,
         _show_total,
+        _show_size,
         _show_date_modified,
         help,
         version,
@@ -51,11 +52,12 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
-fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, bool, PathBuf) {
+fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, bool, bool, PathBuf) {
     let mut all = false;
     let mut group_directories_first = false;
     let mut group_directories_last = false;
     let mut show_total = false;
+    let mut show_size = false;
     let mut show_date_modified = false;
     let mut help = false;
     let mut version = false;
@@ -74,6 +76,9 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, bool, Pat
             }
             "--show-total" => {
                 show_total = true;
+            }
+            "--show-size" => {
+                show_size = true;
             }
             "--show-date-modified" => {
                 show_date_modified = true;
@@ -100,6 +105,7 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, bool, Pat
         group_directories_first,
         group_directories_last,
         show_total,
+        show_size,
         show_date_modified,
         help,
         version,
@@ -114,6 +120,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
         group_directories_first,
         group_directories_last,
         show_total,
+        show_size,
         show_date_modified,
         _help,
         _version,
@@ -154,6 +161,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
             let mut count = 0;
 
             for entry in entries {
+                let size = bytes_to_human_size(entry.metadata().map(|m| m.size()).unwrap());
                 let date_modified = DateTime::<Local>::from(
                     entry.metadata().map(|m| m.modified()).unwrap().unwrap(),
                 )
@@ -162,6 +170,10 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
+                    if show_size {
+                        print!("{} ", size);
+                    }
+
                     if show_date_modified {
                         print!("{} ", date_modified);
                     }
@@ -184,6 +196,26 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     Ok(())
 }
 
+fn bytes_to_human_size(bytes: u64) -> String {
+    const UNITS: [&str; 7] = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
+
+    let mut size = bytes as f64;
+    let mut unit = 0;
+
+    while size >= 1024.0 && unit < UNITS.len() - 1 {
+        size /= 1024.0;
+        unit += 1;
+    }
+
+    if size < 10.0 {
+        format!("{:.2} {}", size, UNITS[unit])
+    } else if size < 100.0 {
+        format!("{:.1} {}", size, UNITS[unit])
+    } else {
+        format!("{:.0} {}", size, UNITS[unit])
+    }
+}
+
 fn print_help() {
     println!(
         r#"USAGE:
@@ -194,6 +226,7 @@ OPTIONS:
     --group-directories-first    List directories before other files
     --group-directories-last     List directories after other files
     --show-total                 Show total entries count
+    --show-size                  Show entry size
     --show-date-modified         Show last modified short date
     -h, --help                   Print help
     -V, --version                Print version"#
