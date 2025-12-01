@@ -38,6 +38,7 @@ fn main() -> io::Result<()> {
         _all,
         _group_directories_first,
         _group_directories_last,
+        _long,
         _show_total,
         _show_permissions,
         _show_owner,
@@ -76,11 +77,13 @@ fn parse_args(
     bool,
     bool,
     bool,
+    bool,
     PathBuf,
 ) {
     let mut all = false;
     let mut group_directories_first = false;
     let mut group_directories_last = false;
+    let mut long = false;
     let mut show_total = false;
     let mut show_permissions = false;
     let mut show_owner = false;
@@ -100,6 +103,9 @@ fn parse_args(
             }
             "--group-directories-last" => {
                 group_directories_last = true;
+            }
+            "-l" | "--long" => {
+                long = true;
             }
             "--show-total" => {
                 show_total = true;
@@ -137,6 +143,7 @@ fn parse_args(
         all,
         group_directories_first,
         group_directories_last,
+        long,
         show_total,
         show_permissions,
         show_owner,
@@ -240,6 +247,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
         all,
         group_directories_first,
         group_directories_last,
+        long,
         show_total,
         show_permissions,
         show_owner,
@@ -293,19 +301,19 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
-                    if show_permissions {
+                    if long || show_permissions {
                         print!("{} ", permissions)
                     }
 
-                    if show_owner {
+                    if long || show_owner {
                         print!("{} ", owner);
                     }
 
-                    if show_size {
+                    if long || show_size {
                         print!("{} ", size);
                     }
 
-                    if show_date_modified {
+                    if long || show_date_modified {
                         print!("{} ", date_modified);
                     }
 
@@ -315,7 +323,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 }
             }
 
-            if show_total {
+            if long || show_total {
                 println!("-------{}", "-".repeat(count.to_string().len()));
                 println!("Total: {}", count);
             }
@@ -336,6 +344,7 @@ OPTIONS:
     -a, --all                    Do not ignore entries starting with .
     --group-directories-first    List directories before other files
     --group-directories-last     List directories after other files
+    -l, --long                   Use a long listing
     --show-total                 Show total entries count
     --show-permissions           Show entry permissions
     --show-owner                 Show entry owner
