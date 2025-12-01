@@ -17,6 +17,7 @@
  * along with LSX. If not, see <https://www.gnu.org/licenses/>
  */
 
+use chrono::{DateTime, Local};
 use colored::Colorize;
 use std::{cmp::Ordering, env, fs, io, path::PathBuf};
 
@@ -24,7 +25,8 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (_all, _group_directories_first, _group_directories_last, _show_total, help, version, dir) = parse_args(&args);
+    let (_all, _group_directories_first, _group_directories_last, _show_total, help, version, dir) =
+        parse_args(&args);
 
     if help {
         print_help();
@@ -94,7 +96,8 @@ fn parse_args(args: &[String]) -> (bool, bool, bool, bool, bool, bool, PathBuf) 
 
 fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let (all, group_directories_first, group_directories_last, show_total, _help, _version, _dir) = parse_args(&args);
+    let (all, group_directories_first, group_directories_last, show_total, _help, _version, _dir) =
+        parse_args(&args);
 
     if let Ok(exists) = fs::exists(&dir) {
         if exists {
@@ -130,10 +133,15 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
             let mut count = 0;
 
             for entry in entries {
+                let date_modified = DateTime::<Local>::from(
+                    entry.metadata().map(|m| m.modified()).unwrap().unwrap(),
+                )
+                .format("%d %b %H:%M")
+                .to_string();
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
-                    println!("{}", name);
+                    println!("{} {}", date_modified, name);
 
                     count += 1;
                 }
