@@ -105,6 +105,8 @@ Here is the basic usage guide:
     lsx --version
     ```
 
+It is highly recommended to make an alias for LSX in your shell configuration file so you don't have to type your favorite options every type. For me, it's `alias lsx="lsx --all --group-directories-first --show-all-columns --table"`, with this line in my `~/.zshrc` I can just type `lsx` instead of the long command with all the options!
+
 ## Feedback
 
 Found a bug? [Open an issue](https://github.com/desyatkoff/lsx/issues/new)
