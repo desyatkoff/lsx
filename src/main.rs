@@ -28,9 +28,27 @@ use std::{
     path::PathBuf,
     time::SystemTime,
 };
+use tabled::{
+    Table, Tabled,
+    settings::{Remove, Style, location::ByColumnName},
+};
 use users::get_user_by_uid;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[derive(Tabled)]
+struct Entry {
+    #[tabled{rename="Permissions"}]
+    permissions: String,
+    #[tabled{rename="Owner"}]
+    owner: String,
+    #[tabled{rename="Size"}]
+    size: String,
+    #[tabled{rename="Date Modified"}]
+    date_modified: String,
+    #[tabled{rename="Name"}]
+    name: String,
+}
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -38,12 +56,13 @@ fn main() -> io::Result<()> {
         _all,
         _group_directories_first,
         _group_directories_last,
-        _long,
-        _show_total,
+        _show_all_columns,
         _show_permissions,
         _show_owner,
         _show_size,
         _show_date_modified,
+        _show_total,
+        _table,
         help,
         version,
         dir,
@@ -78,17 +97,19 @@ fn parse_args(
     bool,
     bool,
     bool,
+    bool,
     PathBuf,
 ) {
     let mut all = false;
     let mut group_directories_first = false;
     let mut group_directories_last = false;
-    let mut long = false;
-    let mut show_total = false;
+    let mut show_all_columns = false;
     let mut show_permissions = false;
     let mut show_owner = false;
     let mut show_size = false;
     let mut show_date_modified = false;
+    let mut show_total = false;
+    let mut table = false;
     let mut help = false;
     let mut version = false;
     let mut directory = None;
@@ -104,11 +125,8 @@ fn parse_args(
             "--group-directories-last" => {
                 group_directories_last = true;
             }
-            "-l" | "--long" => {
-                long = true;
-            }
-            "--show-total" => {
-                show_total = true;
+            "--show-all-columns" => {
+                show_all_columns = true;
             }
             "--show-permissions" => {
                 show_permissions = true;
@@ -121,6 +139,12 @@ fn parse_args(
             }
             "--show-date-modified" => {
                 show_date_modified = true;
+            }
+            "--show-total" => {
+                show_total = true;
+            }
+            "-t" | "--table" => {
+                table = true;
             }
             "-h" | "--help" => {
                 help = true;
@@ -143,12 +167,13 @@ fn parse_args(
         all,
         group_directories_first,
         group_directories_last,
-        long,
-        show_total,
+        show_all_columns,
         show_permissions,
         show_owner,
         show_size,
         show_date_modified,
+        show_total,
+        table,
         help,
         version,
         directory,
@@ -247,16 +272,19 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
         all,
         group_directories_first,
         group_directories_last,
-        long,
-        show_total,
+        show_all_columns,
         show_permissions,
         show_owner,
         show_size,
         show_date_modified,
+        show_total,
+        table,
         _help,
         _version,
         _dir,
     ) = parse_args(&args);
+
+    let mut entries_array = Vec::new();
 
     if let Ok(exists) = fs::exists(&dir) {
         if exists {
@@ -301,29 +329,63 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
-                    if long || show_permissions {
-                        print!("{} ", permissions)
+                    if !table {
+                        if show_all_columns || show_permissions {
+                            print!("{} ", permissions)
+                        }
+
+                        if show_all_columns || show_owner {
+                            print!("{} ", owner);
+                        }
+
+                        if show_all_columns || show_size {
+                            print!("{} ", size);
+                        }
+
+                        if show_all_columns || show_date_modified {
+                            print!("{} ", date_modified);
+                        }
+
+                        println!("{}", name);
                     }
 
-                    if long || show_owner {
-                        print!("{} ", owner);
-                    }
-
-                    if long || show_size {
-                        print!("{} ", size);
-                    }
-
-                    if long || show_date_modified {
-                        print!("{} ", date_modified);
-                    }
-
-                    println!("{}", name);
+                    entries_array.push(Entry {
+                        permissions,
+                        owner,
+                        size,
+                        date_modified,
+                        name,
+                    });
 
                     count += 1;
                 }
             }
 
-            if long || show_total {
+            if table {
+                let mut table_instance = Table::new(entries_array);
+
+                table_instance.with(Style::rounded());
+
+                if !show_all_columns && !show_permissions {
+                    table_instance.with(Remove::column(ByColumnName::new("Permissions")));
+                }
+
+                if !show_all_columns && !show_owner {
+                    table_instance.with(Remove::column(ByColumnName::new("Owner")));
+                }
+
+                if !show_all_columns && !show_size {
+                    table_instance.with(Remove::column(ByColumnName::new("Size")));
+                }
+
+                if !show_all_columns && !show_date_modified {
+                    table_instance.with(Remove::column(ByColumnName::new("Date Modified")));
+                }
+
+                println!("{}", table_instance);
+            }
+
+            if !table && (show_all_columns || show_total) {
                 println!("-------{}", "-".repeat(count.to_string().len()));
                 println!("Total: {}", count);
             }
@@ -344,12 +406,13 @@ OPTIONS:
     -a, --all                    Do not ignore entries starting with .
     --group-directories-first    List directories before other files
     --group-directories-last     List directories after other files
-    -l, --long                   Use a long listing
+    --show-all-columns           Enable every --show-* options below
+    --show-permissions           Show entry permissions column
+    --show-owner                 Show entry owner column
+    --show-size                  Show entry size column
+    --show-date-modified         Show entry date modified column
     --show-total                 Show total entries count
-    --show-permissions           Show entry permissions
-    --show-owner                 Show entry owner
-    --show-size                  Show entry size
-    --show-date-modified         Show last modified short date
+    -t, --table                  Use a table view
     -h, --help                   Print help
     -V, --version                Print version"#
     );
