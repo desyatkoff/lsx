@@ -19,10 +19,29 @@ Imagine ls command, but better
 ## Features
 
 * Lists files and directories
+* Option to group directories before or after other files
+* Options to show:
+    + Permissions
+    + Owner
+    + Size
+    + Date modified
+    + Total entries count
+* Option to enable table view instead of classic list view
 
 ## Installation
 
-Choose your preferred installation method:
+If you use Arch Linux, choose one of these installation methods (note that the AUR package is `ls-x`, not `lsx`):
+
+* Install from AUR using `yay` helper
+    ```Shell
+    yay -S ls-x
+    ```
+* Install from AUR without using `yay` helper:
+    ```Shell
+    git clone https://aur.archlinux.org/ls-x.git && cd ls-x/ && makepkg -si
+    ```
+
+If you use some other OS, choose one of these installation methods:
 
 * `git clone` the repository and launch installer script
     ```Shell
