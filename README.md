@@ -1,12 +1,6 @@
 # LSX
 
-```
- _     ______  __
-| |   / ___\ \/ /
-| |   \___ \\  / 
-| |___ ___) /  \ 
-|_____|____/_/\_\
-```
+![](/assets/demo.png)
 
 <p align="center">
     &ensp;<a href="#description"><kbd>&ensp;<br />&ensp;&ensp;Description&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
