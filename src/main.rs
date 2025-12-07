@@ -406,13 +406,13 @@ OPTIONS:
     -a, --all                    Do not ignore entries starting with .
     --group-directories-first    List directories before other files
     --group-directories-last     List directories after other files
-    --show-all-columns           Enable every --show-* options below
+    --show-all-columns           Enable every --show-* option below
     --show-permissions           Show entry permissions column
     --show-owner                 Show entry owner column
     --show-size                  Show entry size column
     --show-date-modified         Show entry date modified column
     --show-total                 Show total entries count
-    -t, --table                  Use a table view
+    -t, --table                  Use table view
     -h, --help                   Print help
     -V, --version                Print version"#
     );
