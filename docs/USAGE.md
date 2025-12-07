@@ -2,7 +2,7 @@
 
 Here is the basic usage guide:
 
-* Do not ignore entries starting with .
+* Do not ignore entries starting with `.`
     ```Shell
     lsx --all
     ```
@@ -14,29 +14,33 @@ Here is the basic usage guide:
     ```Shell
     lsx --group-directories-last
     ```
-* Use a long listing
+* Enable every `--show-*` option below
     ```Shell
-    lsx --long
+    lsx --show-all-columns
+    ```
+* Show entry permissions column
+    ```Shell
+    lsx --show-permissions
+    ```
+* Show entry owner column
+    ```Shell
+    lsx --show-owner
+    ```
+* Show entry size column
+    ```Shell
+    lsx --show-size
+    ```
+* Show entry date modified column
+    ```Shell
+    lsx --show-date-modified
     ```
 * Show total entries count
     ```Shell
     lsx --show-total
     ```
-* Show entry permissions
+* Use table view
     ```Shell
-    lsx --show-permissions
-    ```
-* Show entry owner
-    ```Shell
-    lsx --show-owner
-    ```
-* Show entry size
-    ```Shell
-    lsx --show-size
-    ```
-* Show entry last modified short date
-    ```Shell
-    lsx --show-date-modified
+    lsx --table
     ```
 * Print help
     ```Shell
