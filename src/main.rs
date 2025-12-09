@@ -30,7 +30,11 @@ use std::{
 };
 use tabled::{
     Table, Tabled,
-    settings::{Remove, Style, location::ByColumnName},
+    settings::{
+        Color, Remove, Style,
+        location::ByColumnName,
+        object::{Columns, Rows},
+    },
 };
 use users::get_user_by_uid;
 
@@ -63,6 +67,7 @@ fn main() -> io::Result<()> {
         _show_date_modified,
         _show_total,
         _table,
+        _colors,
         help,
         version,
         dir,
@@ -98,6 +103,7 @@ fn parse_args(
     bool,
     bool,
     bool,
+    bool,
     PathBuf,
 ) {
     let mut all = false;
@@ -110,6 +116,7 @@ fn parse_args(
     let mut show_date_modified = false;
     let mut show_total = false;
     let mut table = false;
+    let mut colors = false;
     let mut help = false;
     let mut version = false;
     let mut directory = None;
@@ -146,6 +153,9 @@ fn parse_args(
             "-t" | "--table" => {
                 table = true;
             }
+            "-c" | "--colors" => {
+                colors = true;
+            }
             "-h" | "--help" => {
                 help = true;
             }
@@ -174,6 +184,7 @@ fn parse_args(
         show_date_modified,
         show_total,
         table,
+        colors,
         help,
         version,
         directory,
@@ -279,6 +290,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
         show_date_modified,
         show_total,
         table,
+        colors,
         _help,
         _version,
         _dir,
@@ -331,22 +343,22 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 if all || !name.starts_with('.') {
                     if !table {
                         if show_all_columns || show_permissions {
-                            print!("{} ", permissions)
+                            print!("{} ", permissions.red())
                         }
 
                         if show_all_columns || show_owner {
-                            print!("{} ", owner);
+                            print!("{} ", owner.green());
                         }
 
                         if show_all_columns || show_size {
-                            print!("{} ", size);
+                            print!("{} ", size.yellow());
                         }
 
                         if show_all_columns || show_date_modified {
-                            print!("{} ", date_modified);
+                            print!("{} ", date_modified.magenta());
                         }
 
-                        println!("{}", name);
+                        println!("{}", name.cyan());
                     }
 
                     entries_array.push(Entry {
@@ -365,6 +377,15 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 let mut table_instance = Table::new(entries_array);
 
                 table_instance.with(Style::rounded());
+
+                if colors {
+                    table_instance.modify(Columns::one(0), Color::FG_RED);
+                    table_instance.modify(Columns::one(1), Color::FG_GREEN);
+                    table_instance.modify(Columns::one(2), Color::FG_YELLOW);
+                    table_instance.modify(Columns::one(3), Color::FG_MAGENTA);
+                    table_instance.modify(Columns::one(4), Color::FG_CYAN);
+                    table_instance.modify(Rows::first(), Color::FG_BLUE);
+                }
 
                 if !show_all_columns && !show_permissions {
                     table_instance.with(Remove::column(ByColumnName::new("Permissions")));
@@ -413,6 +434,7 @@ OPTIONS:
     --show-date-modified         Show entry date modified column
     --show-total                 Show total entries count
     -t, --table                  Use table view
+    -c, --colors                 Colorize output
     -h, --help                   Print help
     -V, --version                Print version"#
     );
