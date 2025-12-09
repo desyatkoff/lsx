@@ -342,23 +342,43 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
 
                 if all || !name.starts_with('.') {
                     if !table {
-                        if show_all_columns || show_permissions {
-                            print!("{} ", permissions.red())
-                        }
+                        if colors {
+                            if show_all_columns || show_permissions {
+                                print!("{} ", permissions.red());
+                            }
 
-                        if show_all_columns || show_owner {
-                            print!("{} ", owner.green());
-                        }
+                            if show_all_columns || show_owner {
+                                print!("{} ", owner.green());
+                            }
 
-                        if show_all_columns || show_size {
-                            print!("{} ", size.yellow());
-                        }
+                            if show_all_columns || show_size {
+                                print!("{} ", size.yellow());
+                            }
 
-                        if show_all_columns || show_date_modified {
-                            print!("{} ", date_modified.magenta());
-                        }
+                            if show_all_columns || show_date_modified {
+                                print!("{} ", date_modified.magenta());
+                            }
 
-                        println!("{}", name.cyan());
+                            println!("{}", name.cyan());
+                        } else {
+                            if show_all_columns || show_permissions {
+                                print!("{} ", permissions);
+                            }
+
+                            if show_all_columns || show_owner {
+                                print!("{} ", owner);
+                            }
+
+                            if show_all_columns || show_size {
+                                print!("{} ", size);
+                            }
+
+                            if show_all_columns || show_date_modified {
+                                print!("{} ", date_modified);
+                            }
+
+                            println!("{}", name);
+                        }
                     }
 
                     entries_array.push(Entry {
