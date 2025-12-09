@@ -42,6 +42,10 @@ Here is the basic usage guide:
     ```Shell
     lsx --table
     ```
+* Colorize output
+    ```Shell
+    lsx --colors
+    ```
 * Print help
     ```Shell
     lsx --help
