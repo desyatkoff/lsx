@@ -27,6 +27,7 @@ Imagine ls command, but better
     + Date modified
     + Total entries count
 * Option to enable table view instead of classic list view
+* Option to print colorful output
 
 ## Installation
 
@@ -95,6 +96,10 @@ Here is the basic usage guide:
 * Use table view
     ```Shell
     lsx --table
+    ```
+* Colorize output
+    ```Shell
+    lsx --colors
     ```
 * Print help
     ```Shell
