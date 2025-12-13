@@ -19,6 +19,7 @@
 
 use chrono::{DateTime, Local};
 use colored::Colorize;
+use serde::Serialize;
 use std::{
     cmp::Ordering,
     env,
@@ -26,7 +27,7 @@ use std::{
     io,
     os::unix::fs::{FileTypeExt, MetadataExt, PermissionsExt},
     path::PathBuf,
-    time::SystemTime,
+    time::{SystemTime, UNIX_EPOCH},
 };
 use tabled::{
     Table, Tabled,
@@ -40,8 +41,18 @@ use users::get_user_by_uid;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Tabled)]
+#[derive(Serialize)]
 struct Entry {
+    permissions: String,
+    owner_uid: u32,
+    owner: String,
+    size_in_bytes: u64,
+    date_modified: u64,
+    name: String,
+}
+
+#[derive(Tabled)]
+struct EntryHuman {
     #[tabled{rename="Permissions"}]
     permissions: String,
     #[tabled{rename="Owner"}]
@@ -66,8 +77,9 @@ fn main() -> io::Result<()> {
         _show_size,
         _show_date_modified,
         _show_total,
-        _table,
         _colors,
+        _table,
+        _json,
         help,
         version,
         dir,
@@ -104,6 +116,7 @@ fn parse_args(
     bool,
     bool,
     bool,
+    bool,
     PathBuf,
 ) {
     let mut all = false;
@@ -115,8 +128,9 @@ fn parse_args(
     let mut show_size = false;
     let mut show_date_modified = false;
     let mut show_total = false;
-    let mut table = false;
     let mut colors = false;
+    let mut table = false;
+    let mut json = false;
     let mut help = false;
     let mut version = false;
     let mut directory = None;
@@ -150,11 +164,14 @@ fn parse_args(
             "--show-total" => {
                 show_total = true;
             }
+            "-c" | "--colors" => {
+                colors = true;
+            }
             "-t" | "--table" => {
                 table = true;
             }
-            "-c" | "--colors" => {
-                colors = true;
+            "-j" | "--json" => {
+                json = true;
             }
             "-h" | "--help" => {
                 help = true;
@@ -183,8 +200,9 @@ fn parse_args(
         show_size,
         show_date_modified,
         show_total,
-        table,
         colors,
+        table,
+        json,
         help,
         version,
         directory,
@@ -289,14 +307,16 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
         show_size,
         show_date_modified,
         show_total,
-        table,
         colors,
+        table,
+        json,
         _help,
         _version,
         _dir,
     ) = parse_args(&args);
 
     let mut entries_array = Vec::new();
+    let mut entries_human_array = Vec::new();
 
     if let Ok(exists) = fs::exists(&dir) {
         if exists {
@@ -332,49 +352,59 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
             let mut count = 0;
 
             for entry in entries {
-                let permissions = get_permissions_string(&entry.metadata().unwrap());
-                let owner = get_owner(entry.metadata().map(|m| m.uid()).unwrap());
-                let size = bytes_to_human_size(entry.metadata().map(|m| m.size()).unwrap());
-                let date_modified = system_time_to_human_time(
+                let permissions_human = get_permissions_string(&entry.metadata().unwrap());
+                let owner_uid = entry.metadata().map(|m| m.uid()).unwrap();
+                let owner_human = get_owner(owner_uid);
+                let size_in_bytes = entry.metadata().map(|m| m.size()).unwrap();
+                let size_human = bytes_to_human_size(size_in_bytes);
+                let date_modified = entry
+                    .metadata()
+                    .map(|m| m.modified())
+                    .unwrap()
+                    .unwrap()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
+                let date_modified_human = system_time_to_human_time(
                     entry.metadata().map(|m| m.modified()).unwrap().unwrap(),
                 );
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if all || !name.starts_with('.') {
-                    if !table {
+                    if !table && !json {
                         if colors {
                             if show_all_columns || show_permissions {
-                                print!("{} ", permissions.red());
+                                print!("{} ", permissions_human.red());
                             }
 
                             if show_all_columns || show_owner {
-                                print!("{} ", owner.green());
+                                print!("{} ", owner_human.green());
                             }
 
                             if show_all_columns || show_size {
-                                print!("{} ", size.yellow());
+                                print!("{} ", size_human.yellow());
                             }
 
                             if show_all_columns || show_date_modified {
-                                print!("{} ", date_modified.magenta());
+                                print!("{} ", date_modified_human.magenta());
                             }
 
                             println!("{}", name.cyan());
                         } else {
                             if show_all_columns || show_permissions {
-                                print!("{} ", permissions);
+                                print!("{} ", permissions_human);
                             }
 
                             if show_all_columns || show_owner {
-                                print!("{} ", owner);
+                                print!("{} ", owner_human);
                             }
 
                             if show_all_columns || show_size {
-                                print!("{} ", size);
+                                print!("{} ", size_human);
                             }
 
                             if show_all_columns || show_date_modified {
-                                print!("{} ", date_modified);
+                                print!("{} ", date_modified_human);
                             }
 
                             println!("{}", name);
@@ -382,11 +412,20 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                     }
 
                     entries_array.push(Entry {
-                        permissions,
-                        owner,
-                        size,
-                        date_modified,
-                        name,
+                        permissions: String::from(&permissions_human),
+                        owner_uid: owner_uid,
+                        owner: String::from(&owner_human),
+                        size_in_bytes: size_in_bytes,
+                        date_modified: date_modified,
+                        name: String::from(&name),
+                    });
+
+                    entries_human_array.push(EntryHuman {
+                        permissions: String::from(&permissions_human),
+                        owner: String::from(&owner_human),
+                        size: size_human,
+                        date_modified: date_modified_human,
+                        name: String::from(&name),
                     });
 
                     count += 1;
@@ -394,7 +433,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
             }
 
             if table {
-                let mut table_instance = Table::new(entries_array);
+                let mut table_instance = Table::new(&entries_human_array);
 
                 table_instance.with(Style::rounded());
 
@@ -426,7 +465,11 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 println!("{}", table_instance);
             }
 
-            if !table && (show_all_columns || show_total) {
+            if json {
+                println!("{}", serde_json::to_string_pretty(&entries_array).unwrap());
+            }
+
+            if (!table && !json) && (show_all_columns || show_total) {
                 println!("-------{}", "-".repeat(count.to_string().len()));
                 println!("Total: {}", count);
             }
@@ -453,8 +496,9 @@ OPTIONS:
     --show-size                  Show entry size column
     --show-date-modified         Show entry date modified column
     --show-total                 Show total entries count
-    -t, --table                  Use table view
     -c, --colors                 Colorize output
+    -t, --table                  Use table view
+    -j, --json                   JSON output
     -h, --help                   Print help
     -V, --version                Print version"#
     );
