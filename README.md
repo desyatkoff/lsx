@@ -28,6 +28,7 @@ Imagine ls command, but better
     + Total entries count
 * Option to enable table view instead of classic list view
 * Option to print colorful output
+* Option to print output as JSON object
 
 ## Installation
 
@@ -93,13 +94,17 @@ Here is the basic usage guide:
     ```Shell
     lsx --show-total
     ```
+* Colorize output
+    ```Shell
+    lsx --colors
+    ```
 * Use table view
     ```Shell
     lsx --table
     ```
-* Colorize output
+* JSON output
     ```Shell
-    lsx --colors
+    lsx --json
     ```
 * Print help
     ```Shell

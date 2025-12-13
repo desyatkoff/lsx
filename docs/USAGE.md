@@ -38,13 +38,17 @@ Here is the basic usage guide:
     ```Shell
     lsx --show-total
     ```
+* Colorize output
+    ```Shell
+    lsx --colors
+    ```
 * Use table view
     ```Shell
     lsx --table
     ```
-* Colorize output
+* JSON output
     ```Shell
-    lsx --colors
+    lsx --json
     ```
 * Print help
     ```Shell
