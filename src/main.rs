@@ -439,7 +439,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 }
             }
 
-            if table && !json && entries_array.is_empty() {
+            if table && !json && !entries_array.is_empty() {
                 let mut table_instance = Table::new(&entries_human_array);
 
                 table_instance.with(Style::rounded());
