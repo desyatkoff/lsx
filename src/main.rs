@@ -441,7 +441,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 }
             }
 
-            if table && !json {
+            if table && !json && entries_array.len() > 0 {
                 let mut table_instance = Table::new(&entries_human_array);
 
                 table_instance.with(Style::rounded());
