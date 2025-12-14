@@ -68,7 +68,7 @@ struct EntryHuman {
 }
 
 /// Entry point
-fn main() -> io::Result<()> {
+fn main() {
     let args: Vec<String> = env::args().collect();
     let (
         _all,
@@ -99,8 +99,6 @@ fn main() -> io::Result<()> {
     if !help && !version {
         let _ = list_dir_content(dir);
     }
-
-    Ok(())
 }
 
 /// Parses arguments/options from CLI
@@ -401,22 +399,22 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                             println!("{}", name.cyan());
                         } else {
                             if show_all_columns || show_permissions {
-                                print!("{} ", permissions_human);
+                                print!("{permissions_human} ");
                             }
 
                             if show_all_columns || show_owner {
-                                print!("{} ", owner_human);
+                                print!("{owner_human} ");
                             }
 
                             if show_all_columns || show_size {
-                                print!("{} ", size_human);
+                                print!("{size_human} ");
                             }
 
                             if show_all_columns || show_date_modified {
-                                print!("{} ", date_modified_human);
+                                print!("{date_modified_human} ");
                             }
 
-                            println!("{}", name);
+                            println!("{name}");
                         }
                     }
 
@@ -441,7 +439,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 }
             }
 
-            if table && !json && entries_array.len() > 0 {
+            if table && !json && entries_array.is_empty() {
                 let mut table_instance = Table::new(&entries_human_array);
 
                 table_instance.with(Style::rounded());
@@ -471,7 +469,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                     table_instance.with(Remove::column(ByColumnName::new("Date Modified")));
                 }
 
-                println!("{}", table_instance);
+                println!("{table_instance}");
             }
 
             if json && !table {
@@ -480,7 +478,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
 
             if (!table && !json) && (show_all_columns || show_total) {
                 println!("-------{}", "-".repeat(count.to_string().len()));
-                println!("Total: {}", count);
+                println!("Total: {count}");
             }
         } else {
             eprintln!("{}: no such file or directory", "error".red().bold());
