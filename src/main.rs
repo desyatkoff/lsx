@@ -441,7 +441,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 }
             }
 
-            if table {
+            if table && !json {
                 let mut table_instance = Table::new(&entries_human_array);
 
                 table_instance.with(Style::rounded());
@@ -474,7 +474,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
                 println!("{}", table_instance);
             }
 
-            if json {
+            if json && !table {
                 println!("{}", serde_json::to_string_pretty(&entries_array).unwrap());
             }
 
