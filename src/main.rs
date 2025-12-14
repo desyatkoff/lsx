@@ -41,6 +41,7 @@ use users::get_user_by_uid;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+/// Contains data for JSON output
 #[derive(Serialize)]
 struct Entry {
     permissions: String,
@@ -51,6 +52,7 @@ struct Entry {
     name: String,
 }
 
+/// Contains data for table view output
 #[derive(Tabled)]
 struct EntryHuman {
     #[tabled{rename="Permissions"}]
@@ -65,6 +67,7 @@ struct EntryHuman {
     name: String,
 }
 
+/// Entry point
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let (
@@ -100,6 +103,7 @@ fn main() -> io::Result<()> {
     Ok(())
 }
 
+/// Parses arguments/options from CLI
 fn parse_args(
     args: &[String],
 ) -> (
@@ -209,6 +213,7 @@ fn parse_args(
     )
 }
 
+/// Creates a permissions string from entry metadata
 fn get_permissions_string(meta: &Metadata) -> String {
     fn bit(x: u32, bit: u32, c: char) -> char {
         if x & bit != 0 { c } else { '-' }
@@ -260,6 +265,7 @@ fn get_permissions_string(meta: &Metadata) -> String {
     s
 }
 
+/// Parses owner username by UID
 fn get_owner(uid: u32) -> String {
     get_user_by_uid(uid)
         .unwrap()
@@ -269,6 +275,7 @@ fn get_owner(uid: u32) -> String {
         .to_string()
 }
 
+/// Converts bytes to human-readable `String`
 fn bytes_to_human_size(bytes: u64) -> String {
     const UNITS: [&str; 7] = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
 
@@ -289,12 +296,14 @@ fn bytes_to_human_size(bytes: u64) -> String {
     }
 }
 
+/// Converts `SystemTime` to human-readable `String`
 fn system_time_to_human_time(time: SystemTime) -> String {
     DateTime::<Local>::from(time)
         .format("%d %b %H:%M")
         .to_string()
 }
 
+/// Prints the entries from specified directory
 fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let (
@@ -481,6 +490,7 @@ fn list_dir_content(dir: PathBuf) -> io::Result<()> {
     Ok(())
 }
 
+/// `--help`
 fn print_help() {
     println!(
         r#"USAGE:
@@ -504,6 +514,7 @@ OPTIONS:
     );
 }
 
+/// `--version`
 fn print_version() {
     println!(
         r#" _     ______  __
