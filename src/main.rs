@@ -40,40 +40,54 @@ use tabled::{
 };
 use users::get_user_by_uid;
 
+/// CLI options and arguments
 #[derive(Debug, Parser)]
 #[command(name = "LSX", about = "Imagine ls command, but better", version)]
 struct Cli {
+    /// Do not ignore entries starting with `.`
     #[arg(short = 'a', long = "all")]
     all: bool,
+    /// List directories before other files
     #[arg(
         long = "group-directories-first",
         conflicts_with = "group_directories_last"
     )]
     group_directories_first: bool,
+    /// List directories after other files
     #[arg(
         long = "group-directories-last",
         conflicts_with = "group_directories_first"
     )]
     group_directories_last: bool,
+    /// Enable every `--show-*` option below
     #[arg(long = "show-all-columns")]
     show_all_columns: bool,
+    /// Show entry permissions column
     #[arg(long = "show-permissions")]
     show_permissions: bool,
+    /// Show entry owner column
     #[arg(long = "show-owner")]
     show_owner: bool,
+    /// Show entry size column
     #[arg(long = "show-size")]
     show_size: bool,
+    /// Show entry date modified column
     #[arg(long = "show-date-modified")]
     show_date_modified: bool,
+    /// Show total entries count
     #[arg(long = "show-total")]
     show_total: bool,
+    /// Colorize output
     #[arg(short = 'c', long = "colors")]
     colors: bool,
+    /// Use table view
     #[arg(short = 't', long = "table", conflicts_with = "json")]
     table: bool,
+    /// JSON output
     #[arg(short = 'j', long = "json", conflicts_with = "table")]
     json: bool,
-    #[arg(value_name = "DIR", value_parser = clap::value_parser!(PathBuf))]
+    /// Directory to list items from
+    #[arg(value_name = "PATH", value_parser = clap::value_parser!(PathBuf))]
     directory: Option<PathBuf>,
 }
 
