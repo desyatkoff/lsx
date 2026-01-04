@@ -80,6 +80,9 @@ struct Cli {
     /// Colorize output
     #[arg(short = 'c', long = "colors")]
     colors: bool,
+    /// Use Nerd Font icons
+    #[arg(short = 'i', long = "icons")]
+    icons: bool,
     /// Use table view
     #[arg(short = 't', long = "table", conflicts_with = "json")]
     table: bool,
@@ -187,6 +190,7 @@ fn main() -> Result<()> {
                 let date_modified_human = system_time_to_human_time(
                     entry.metadata().map(|m| m.modified()).unwrap().unwrap(),
                 );
+                let icon = get_icon(&permissions_human);
                 let name = entry.file_name().to_string_lossy().to_string();
 
                 if args.all || !name.starts_with('.') {
@@ -208,7 +212,11 @@ fn main() -> Result<()> {
                                 print!("{} ", date_modified_human.magenta());
                             }
 
-                            println!("{}", name.cyan());
+                            if args.icons {
+                                println!("{} {}", icon.cyan(), name.cyan());
+                            } else {
+                                println!("{}", name.cyan());
+                            }
                         } else {
                             if args.show_all_columns || args.show_permissions {
                                 print!("{permissions_human} ");
@@ -226,7 +234,11 @@ fn main() -> Result<()> {
                                 print!("{date_modified_human} ");
                             }
 
-                            println!("{name}");
+                            if args.icons {
+                                println!("{icon} {name}");
+                            } else {
+                                println!("{name}");
+                            }
                         }
                     }
 
@@ -244,7 +256,11 @@ fn main() -> Result<()> {
                         owner: String::from(&owner_human),
                         size: size_human,
                         date_modified: date_modified_human,
-                        name: String::from(&name),
+                        name: if args.icons {
+                            format!("{} {}", &icon, &name)
+                        } else {
+                            String::from(&name)
+                        },
                     });
 
                     count += 1;
@@ -388,4 +404,17 @@ fn system_time_to_human_time(time: SystemTime) -> String {
     DateTime::<Local>::from(time)
         .format("%d %b %H:%M")
         .to_string()
+}
+
+/// Returns an icon according to entry type (directory, file, etc...)
+fn get_icon(perms: &String) -> String {
+    match perms.chars().nth(0).unwrap() {
+        'b' => String::from("󰜫"),
+        'c' => String::from("󰕣"),
+        'd' => String::from("󰉋"),
+        'l' => String::from("󰌷"),
+        'p' => String::from("󰆍"),
+        's' => String::from("󰆨"),
+        _ => String::from("󰈙"),
+    }
 }
