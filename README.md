@@ -1,12 +1,13 @@
 # LSX
 
-![](/assets/demo.png)
+![](/assets/mini_demo.png)
 
 <p align="center">
     &ensp;<a href="#description"><kbd>&ensp;<br />&ensp;&ensp;Description&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
     &ensp;<a href="#features"><kbd>&ensp;<br />&ensp;&ensp;Features&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
     &ensp;<a href="#installation"><kbd>&ensp;<br />&ensp;&ensp;Installation&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
     &ensp;<a href="#usage"><kbd>&ensp;<br />&ensp;&ensp;Usage&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
+    &ensp;<a href="#demo"><kbd>&ensp;<br />&ensp;&ensp;Demo&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
     &ensp;<a href="#feedback"><kbd>&ensp;<br />&ensp;&ensp;Feedback&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
     &ensp;<a href="#contributing"><kbd>&ensp;<br />&ensp;&ensp;Contributing&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
     &ensp;<a href="#license"><kbd>&ensp;<br />&ensp;&ensp;License&ensp;&ensp;<br />&ensp;</kbd></a>&ensp;
@@ -121,6 +122,10 @@ Here is the basic usage guide:
     ```
 
 It is highly recommended to make an alias for LSX in your shell configuration file so you don't have to type your favorite options every type. For me, it's `alias lsx="lsx --all --group-directories-first --show-all-columns --colors --icons --table"`, with this line in my `~/.zshrc` I can just type `lsx` instead of the long command with all the options!
+
+## Demo
+
+![](/assets/full_demo.png)
 
 ## Feedback
 
