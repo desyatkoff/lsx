@@ -1,6 +1,6 @@
 [package]
 name = "lsx"
-version = "1.4.0-dev"
+version = "1.4.0"
 authors = ["Sergey Desyatkov <sergeydesyatkov@proton.me>"]
 edition = "2024"
 description = "Imagine ls command, but better"
