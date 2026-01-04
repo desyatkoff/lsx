@@ -42,6 +42,10 @@ Here is the basic usage guide:
     ```Shell
     lsx --colors
     ```
+* Use Nerd Font icons
+    ```Shell
+    lsx --icons
+    ```
 * Use table view
     ```Shell
     lsx --table

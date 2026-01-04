@@ -28,6 +28,7 @@ Imagine ls command, but better
     + Total entries count
 * Option to enable table view instead of classic list view
 * Option to print colorful output
+* Option to print icons next to entry names (Nerd Font)
 * Option to print output as JSON object
 
 ## Installation
@@ -98,6 +99,10 @@ Here is the basic usage guide:
     ```Shell
     lsx --colors
     ```
+* Use Nerd Font icons
+    ```Shell
+    lsx --icons
+    ```
 * Use table view
     ```Shell
     lsx --table
@@ -115,7 +120,7 @@ Here is the basic usage guide:
     lsx --version
     ```
 
-It is highly recommended to make an alias for LSX in your shell configuration file so you don't have to type your favorite options every type. For me, it's `alias lsx="lsx --all --group-directories-first --show-all-columns --colors --table"`, with this line in my `~/.zshrc` I can just type `lsx` instead of the long command with all the options!
+It is highly recommended to make an alias for LSX in your shell configuration file so you don't have to type your favorite options every type. For me, it's `alias lsx="lsx --all --group-directories-first --show-all-columns --colors --icons --table"`, with this line in my `~/.zshrc` I can just type `lsx` instead of the long command with all the options!
 
 ## Feedback
 
